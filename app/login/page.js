@@ -24,10 +24,12 @@ export default function Login() {
     } else {
       // Guarda datos del usuario en localStorage
       localStorage.setItem("user", JSON.stringify(data));
-      
+
       // Redirige según rol
       if (data.rol === "admin") {
         router.push("/admin/dashboard");
+      } else if (data.rol === "personal") {
+        router.push("/personal/dashboard");
       } else {
         router.push("/usuario/dashboard");
       }
@@ -41,7 +43,7 @@ export default function Login() {
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto bg-white p-8 rounded shadow">
       <h2 className="text-2xl font-bold mb-4 text-center">Iniciar Sesión</h2>
-      
+
       <button
         type="button"
         className="w-full mb-2 py-2 bg-white border border-gray-500 text-gray-800 rounded font-bold"
