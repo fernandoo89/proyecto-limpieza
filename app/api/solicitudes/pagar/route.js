@@ -1,15 +1,8 @@
-import { Pool } from "pg";
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+import pool from "@/lib/db";
 
 export async function POST(request) {
-  const { id } = await request.json(); // id de la solicitud a simular pago
+  const { id } = await request.json();
   if (!id) {
     return new Response(JSON.stringify({ error: "Falta id de solicitud" }), { status: 400 });
   }
