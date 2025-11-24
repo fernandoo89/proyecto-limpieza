@@ -1,12 +1,4 @@
-import { Pool } from "pg";
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD
-});
+import pool from "@/lib/db";
 
 // GET /api/solicitudes/usuario?usuario_id=3
 export async function GET(request) {
@@ -17,7 +9,6 @@ export async function GET(request) {
     return new Response(JSON.stringify({ error: "Falta usuario_id" }), { status: 400 });
   }
   try {
-    // Incluye monto y datos del personal
     const result = await pool.query(
       `SELECT 
          s.id, s.direccion, s.tipo_limpieza, s.fecha, s.hora, s.notas, s.estado, s.monto, s.created_at, 
@@ -32,5 +23,5 @@ export async function GET(request) {
     return new Response(JSON.stringify(result.rows), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ error: "Error al listar solicitudes" }), { status: 500 });
-  }
+  } 
 }
