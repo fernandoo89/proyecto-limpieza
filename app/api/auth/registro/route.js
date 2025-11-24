@@ -1,14 +1,6 @@
-import { Pool } from "pg";
+import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-
-const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || "limpieza-db",
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
 
 export async function POST(req) {
   try {
@@ -27,7 +19,7 @@ export async function POST(req) {
       zona_cobertura,
     } = await req.json();
 
-    // Validar campos requeridos básicos
+    // Validar campos requeridos
     if (!nombre || !apellido || !email || !password || !telefono) {
       return NextResponse.json(
         { error: "Faltan campos requeridos" },
@@ -60,10 +52,8 @@ export async function POST(req) {
       );
     }
 
-    // Hashear contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insertar usuario
     const result = await pool.query(
       `INSERT INTO usuarios
         (nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, fecha_nacimiento, foto_url, anios_experiencia, zona_cobertura)
@@ -94,3 +84,4 @@ export async function POST(req) {
     );
   }
 }
+

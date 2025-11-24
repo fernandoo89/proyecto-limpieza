@@ -1,13 +1,5 @@
-import { Pool } from "pg";
+import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD
-});
 
 // POST: Registrar personal
 export async function POST(request) {

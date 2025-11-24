@@ -1,13 +1,5 @@
-import { Pool } from "pg";
+import pool from "@/lib/db";
 import { NextResponse } from "next/server";
-
-const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || "limpieza-db",
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
 
 export async function POST(req) {
   try {
@@ -20,7 +12,7 @@ export async function POST(req) {
       notas,
       personal_id,
       monto,
-      metodo_pago  // Nuevo campo (opcional, pero recomendable)
+      metodo_pago
     } = await req.json();
 
     if (
@@ -50,7 +42,7 @@ export async function POST(req) {
         fecha,
         hora,
         notas || "",
-        "pagada",         // Estado "pagada" por MVP de simulación (puedes cambiar por "pendiente" si prefieres otro flujo)
+        "pagada",
         personal_id,
         monto,
         metodo_pago || null,

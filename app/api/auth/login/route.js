@@ -1,14 +1,6 @@
-import { Pool } from "pg";
+import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-
-const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || "limpieza-db",
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
 
 export async function POST(req) {
   try {
@@ -22,7 +14,7 @@ export async function POST(req) {
     }
 
     const userRes = await pool.query(
-      "SELECT id, nombre, apellido, email, rol FROM usuarios WHERE email = $1",
+      "SELECT id, nombre, apellido, email, rol, password FROM usuarios WHERE email = $1",
       [email]
     );
     if (userRes.rows.length === 0) {
@@ -32,13 +24,7 @@ export async function POST(req) {
       );
     }
     const user = userRes.rows[0];
-    
-    // Obtener password hasheada para validar
-    const userWithPassword = await pool.query(
-      "SELECT password FROM usuarios WHERE email = $1",
-      [email]
-    );
-    const validPass = await bcrypt.compare(password, userWithPassword.rows[0].password);
+    const validPass = await bcrypt.compare(password, user.password);
 
     if (!validPass) {
       return NextResponse.json(
@@ -47,7 +33,7 @@ export async function POST(req) {
       );
     }
 
-    // Retorna datos del usuario sin JWT por ahora
+    // Retorna datos del usuario sin password
     return NextResponse.json({
       id: user.id,
       rol: user.rol,
