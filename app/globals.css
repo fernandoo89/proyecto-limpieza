@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --purple-50: #faf5ff;
+  --purple-100: #f3e8ff;
+  --purple-500: #7c3aed;
+  --purple-600: #6d28d9;
+  --font-geist-sans: system-ui, -apple-system, sans-serif;
+  --font-geist-mono: "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hero background and small helpers for the new homepage */
+.bg-hero-pattern {
+  background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(250,245,255,1) 50%, rgba(245,243,255,0.6) 100%);
+}
+
+/* Make images used in hero look good by default */
+img[alt*="hero"], img[alt*="Hero"], img[alt*="hero-placeholder"] {
+  background-color: var(--purple-50);
+}
