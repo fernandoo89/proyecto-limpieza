@@ -1,64 +1,59 @@
 import pool from "@/lib/db";
-import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
     const {
-      nombre,
-      apellido,
-      tipo_documento,
-      numero_documento,
-      email,
-      telefono,
-      password,
-      fecha_nacimiento,
+      usuario_id,
+      direccion,
+      tipo_limpieza,
+      fecha,
+      hora,
+      notas,
+      personal_id,
+      monto,
+      metodo_pago
     } = await req.json();
 
-    if (!nombre || !apellido || !email || !password || !telefono) {
+    if (
+      !usuario_id ||
+      !direccion ||
+      !tipo_limpieza ||
+      !fecha ||
+      !hora ||
+      !personal_id ||
+      !monto
+    ) {
       return NextResponse.json(
         { error: "Faltan campos requeridos" },
         { status: 400 }
       );
     }
 
-    // Verificar que no exista el correo
-    const existe = await pool.query(
-      "SELECT id FROM usuarios WHERE email = $1",
-      [email]
-    );
-    if (existe.rows.length > 0) {
-      return NextResponse.json(
-        { error: "El correo ya está registrado" },
-        { status: 400 }
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const result = await pool.query(
-      `INSERT INTO usuarios
-        (nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, fecha_nacimiento)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        RETURNING id, nombre, apellido, email, rol, verificado;`,
+      `INSERT INTO solicitudes
+        (usuario_id, direccion, tipo_limpieza, fecha, hora, notas, estado, created_at, personal_id, monto, metodo_pago)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
+        RETURNING id, usuario_id, direccion, tipo_limpieza, fecha, hora, estado, personal_id, monto, metodo_pago;`,
       [
-        nombre,
-        apellido,
-        tipo_documento,
-        numero_documento,
-        email,
-        telefono,
-        hashedPassword,
-        "cliente",
-        false,
-        fecha_nacimiento,
+        usuario_id,
+        direccion,
+        tipo_limpieza,
+        fecha,
+        hora,
+        notas || "",
+        "pagada",
+        personal_id,
+        monto,
+        metodo_pago || null,
       ]
     );
+
     return NextResponse.json(result.rows[0], { status: 201 });
   } catch (err) {
-    console.error("Error en registro:", err);
+    console.error("Error en crear solicitud:", err);
     return NextResponse.json(
-      { error: "Error al registrar usuario: " + err.message },
+      { error: "Error al crear solicitud: " + err.message },
       { status: 500 }
     );
   }
