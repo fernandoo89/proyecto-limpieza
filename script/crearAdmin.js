@@ -36,9 +36,9 @@ async function crearAdmin() {
     // Crear usuario admin
     const result = await pool.query(
       `INSERT INTO usuarios (
-        nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, estado_verificacion, fecha_nacimiento
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING id, nombre, apellido, email, rol, verificado, estado_verificacion`,
+        nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, estado_verificacion, fecha_nacimiento, email_verified, foto_url
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING id, nombre, apellido, email, rol, verificado, estado_verificacion, email_verified`,
       [
         adminData.nombre,
         adminData.apellido,
@@ -50,7 +50,9 @@ async function crearAdmin() {
         'admin',             // ADMINISTRADOR
         true,                // Verificarlo por defecto
         'aprobado',          // Estado de verificación aprobado
-        adminData.fecha_nacimiento
+        adminData.fecha_nacimiento,
+        true,                // Email verificado (para que pueda hacer login)
+        'https://ui-avatars.com/api/?name=Admin+Sistema&background=0D8ABC&color=fff'
       ]
     );
 
