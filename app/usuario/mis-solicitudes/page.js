@@ -7,6 +7,7 @@ export default function MisSolicitudesPage() {
     const [user, setUser] = useState(null);
     const [solicitudes, setSolicitudes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedRequest, setSelectedRequest] = useState(null);
 
     useEffect(() => {
         const userData = localStorage.getItem("user");
@@ -45,15 +46,6 @@ export default function MisSolicitudesPage() {
         router.push("/");
     };
 
-    const simularPago = async (id) => {
-        await fetch("/api/solicitudes/pagar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id }),
-        });
-        await fetchSolicitudes(user.id);
-    };
-
     if (!user) {
         return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Cargando...</div>;
     }
@@ -61,7 +53,7 @@ export default function MisSolicitudesPage() {
     return (
         <div className="min-h-screen bg-gray-50 flex font-sans">
             {/* SIDEBAR */}
-            <aside className="w-64 bg-gray-900 text-white flex flex-col fixed h-full">
+            <aside className="w-64 bg-gray-900 text-white flex flex-col fixed h-full z-10">
                 <div className="p-6 border-b border-gray-800 flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center font-bold">P</div>
                     <span className="text-xl font-bold">PeruLimpio</span>
@@ -113,7 +105,7 @@ export default function MisSolicitudesPage() {
             </aside>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 ml-64 p-8">
+            <main className="flex-1 ml-64 p-8 relative">
                 <header className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Mis Solicitudes</h1>
@@ -179,13 +171,21 @@ export default function MisSolicitudesPage() {
                                                         {s.estado.charAt(0).toUpperCase() + s.estado.slice(1)}
                                                     </span>
                                                 </td>
-                                                <td className="p-4">
+                                                <td className="p-4 flex gap-2">
                                                     {s.estado === "confirmado" && (
                                                         <button
                                                             onClick={() => router.push(`/solicitar/pago?id=${s.id}`)}
                                                             className="px-3 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
                                                         >
                                                             Pagar
+                                                        </button>
+                                                    )}
+                                                    {s.estado === "pagada" && (
+                                                        <button
+                                                            onClick={() => setSelectedRequest(s)}
+                                                            className="px-3 py-1 border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            Ver Detalles
                                                         </button>
                                                     )}
                                                 </td>
@@ -197,6 +197,75 @@ export default function MisSolicitudesPage() {
                         )}
                     </div>
                 </div>
+
+                {/* MODAL DE DETALLES (RECIBO) */}
+                {selectedRequest && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 className="text-xl font-bold text-gray-800">Detalle del Servicio</h3>
+                                <button
+                                    onClick={() => setSelectedRequest(null)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">
+                                        ✅
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-900">¡Servicio Pagado!</h2>
+                                    <p className="text-gray-500 text-sm">Gracias por confiar en PeruLimpio</p>
+                                </div>
+
+                                <div className="border-t border-b border-gray-100 py-4 space-y-3">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Servicio</span>
+                                        <span className="font-bold text-gray-900">{selectedRequest.tipo_limpieza}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Fecha</span>
+                                        <span className="font-bold text-gray-900">{selectedRequest.fecha}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Hora</span>
+                                        <span className="font-bold text-gray-900">{selectedRequest.hora}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Monto Total</span>
+                                        <span className="font-bold text-purple-600 text-lg">S/ {selectedRequest.monto}</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase font-bold mb-3">Personal Asignado</p>
+                                    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                                            <img
+                                                src={selectedRequest.personal_foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedRequest.personal_nombre + " " + selectedRequest.personal_apellido)}`}
+                                                alt="Personal"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900">{selectedRequest.personal_nombre} {selectedRequest.personal_apellido}</p>
+                                            <p className="text-xs text-gray-500">Limpieza Profesional</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setSelectedRequest(null)}
+                                    className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
