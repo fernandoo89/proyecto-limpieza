@@ -33,6 +33,19 @@ export default function SeleccionaPersonalPage() {
   return (
     <main className="max-w-5xl mx-auto p-8">
       <h2 className="text-2xl font-bold mb-8 text-center text-purple-700">Selecciona Personal de Limpieza</h2>
+
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={() => {
+            localStorage.removeItem("solicitudPersonal");
+            router.push("/solicitar/confirmar");
+          }}
+          className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-full hover:bg-gray-200 transition-colors flex items-center gap-2"
+        >
+          <span>⏩</span> Omitir selección (Asignar cualquiera)
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {personal.map((p) => (
           <div key={p.id} className="bg-white p-6 rounded-lg shadow text-center">

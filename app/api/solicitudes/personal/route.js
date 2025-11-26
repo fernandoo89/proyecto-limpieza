@@ -10,13 +10,14 @@ export async function GET(req) {
         }
 
         const result = await pool.query(
-            `SELECT s.*, u.nombre as cliente_nombre, u.apellido as cliente_apellido, u.direccion as cliente_direccion
-       FROM solicitudes s
-       JOIN usuarios u ON s.usuario_id = u.id
-       WHERE s.personal_id = $1
-       ORDER BY s.fecha_servicio DESC`,
+            `SELECT s.*, u.nombre as cliente_nombre, u.apellido as cliente_apellido
+     FROM solicitudes s
+     JOIN usuarios u ON s.usuario_id = u.id
+     WHERE s.personal_id = $1
+     ORDER BY s.fecha DESC`,
             [personalId]
         );
+
 
         return new Response(JSON.stringify(result.rows), { status: 200 });
     } catch (err) {

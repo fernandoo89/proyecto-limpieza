@@ -105,6 +105,12 @@ export default function UsuarioDashboard() {
             <span>🧹</span> Solicitar Servicio
           </button>
           <button
+            onClick={() => router.push("/usuario/mis-solicitudes")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "historial" ? "bg-purple-600 text-white shadow-lg shadow-purple-900/50" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+          >
+            <span>📅</span> Mis Solicitudes
+          </button>
+          <button
             onClick={() => setActiveTab("perfil")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "perfil" ? "bg-purple-600 text-white shadow-lg shadow-purple-900/50" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
           >
@@ -172,6 +178,7 @@ export default function UsuarioDashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-bold text-gray-900">Solicitudes Recientes</h3>
+                <button onClick={() => router.push("/usuario/mis-solicitudes")} className="text-purple-600 text-sm font-semibold hover:underline">Ver todas</button>
               </div>
               <div className="p-6">
                 {loadingSolicitudes ? (
@@ -180,7 +187,7 @@ export default function UsuarioDashboard() {
                   <p className="text-gray-500">No tienes solicitudes recientes.</p>
                 ) : (
                   <div className="space-y-4">
-                    {solicitudes.map((s) => (
+                    {solicitudes.slice(0, 5).map((s) => (
                       <div key={s.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${s.estado === 'pagada' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
@@ -189,6 +196,9 @@ export default function UsuarioDashboard() {
                           <div>
                             <p className="font-bold text-gray-900">{s.tipo_limpieza}</p>
                             <p className="text-xs text-gray-500">{s.fecha} - {s.hora}</p>
+                            {s.personal_nombre && (
+                              <p className="text-xs text-purple-600 font-semibold">Personal: {s.personal_nombre} {s.personal_apellido}</p>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -197,7 +207,7 @@ export default function UsuarioDashboard() {
                             {s.estado}
                           </span>
                         </div>
-                        {["pendiente", "confirmado"].includes(s.estado) && (
+                        {s.estado === "confirmado" && (
                           <button
                             onClick={() => simularPago(s.id)}
                             className="px-3 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
@@ -260,6 +270,7 @@ export default function UsuarioDashboard() {
                     type="date"
                     name="fecha"
                     value={form.fecha}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={handleChange}
                     className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 transition-all"
                     required

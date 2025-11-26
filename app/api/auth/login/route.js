@@ -14,7 +14,7 @@ export async function POST(req) {
     }
 
     const userRes = await pool.query(
-      "SELECT id, nombre, apellido, email, rol, password FROM usuarios WHERE email = $1",
+      "SELECT id, nombre, apellido, email, rol, password, telefono, tipo_documento, numero_documento, zona_cobertura, anios_experiencia FROM usuarios WHERE email = $1",
       [email]
     );
     if (userRes.rows.length === 0) {
@@ -38,7 +38,13 @@ export async function POST(req) {
       id: user.id,
       rol: user.rol,
       nombre: user.nombre,
+      apellido: user.apellido,
       email: user.email,
+      telefono: user.telefono,
+      tipo_documento: user.tipo_documento,
+      numero_documento: user.numero_documento,
+      zona_cobertura: user.zona_cobertura,
+      anios_experiencia: user.anios_experiencia,
     });
   } catch (err) {
     console.error("Error en login:", err);

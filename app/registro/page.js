@@ -21,6 +21,7 @@ export default function Registro() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) =>
@@ -155,22 +156,39 @@ export default function Registro() {
         onChange={handleChange}
         required
       />
-      <input
-        name="password"
-        type="password"
-        placeholder="Contraseña"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
-      <input
-        name="password2"
-        type="password"
-        placeholder="Confirmar contraseña"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
+      <div className="mb-2 relative">
+        <input
+          name="password"
+          type={showPassword ? "text" : "password"}
+          placeholder="Contraseña"
+          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div className="mb-2 relative">
+        <input
+          name="password2"
+          type={showPassword ? "text" : "password"}
+          placeholder="Confirmar contraseña"
+          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="mb-4 flex items-center">
+        <input
+          type="checkbox"
+          id="showPasswordReg"
+          className="mr-2 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+          checked={showPassword}
+          onChange={() => setShowPassword(!showPassword)}
+        />
+        <label htmlFor="showPasswordReg" className="text-sm text-gray-600 cursor-pointer select-none">
+          Mostrar contraseña
+        </label>
+      </div>
       <label className="block text-sm text-gray-600 mb-1">Fecha de Nacimiento</label>
       <input
         name="fecha_nacimiento"

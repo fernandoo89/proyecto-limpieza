@@ -21,7 +21,6 @@ export async function POST(req) {
       !tipo_limpieza ||
       !fecha ||
       !hora ||
-      !personal_id ||
       !monto
     ) {
       return NextResponse.json(
@@ -42,8 +41,8 @@ export async function POST(req) {
         fecha,
         hora,
         notas || "",
-        "pagada",
-        personal_id,
+        "pendiente",
+        personal_id || null,
         monto,
         metodo_pago || null,
       ]

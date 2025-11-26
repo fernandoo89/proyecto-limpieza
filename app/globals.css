@@ -26,10 +26,12 @@ body {
 
 /* Hero background and small helpers for the new homepage */
 .bg-hero-pattern {
-  background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(250,245,255,1) 50%, rgba(245,243,255,0.6) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(250, 245, 255, 1) 50%, rgba(245, 243, 255, 0.6) 100%);
 }
 
 /* Make images used in hero look good by default */
-img[alt*="hero"], img[alt*="Hero"], img[alt*="hero-placeholder"] {
+img[alt*="hero"],
+img[alt*="Hero"],
+img[alt*="hero-placeholder"] {
   background-color: var(--purple-50);
 }
