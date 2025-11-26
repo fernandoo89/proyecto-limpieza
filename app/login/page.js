@@ -25,7 +25,7 @@ export default function Login() {
     } else {
       localStorage.setItem("user", JSON.stringify(data));
       if (data.rol === "admin") {
-        router.push("/admin/dashboard");
+        router.push("/admin");
       } else if (data.rol === "personal") {
         router.push("/personal/dashboard");
       } else {

@@ -13,14 +13,14 @@ const pool = new Pool({
 async function crearAdmin() {
   try {
     const adminData = {
-      nombre: 'Fernando',
-      apellido: 'Benites',
+      nombre: 'Admin',
+      apellido: 'Sistema',
       tipo_documento: 'DNI',
-      numero_documento: '74988304',
-      email: 'fernando.admin@example.com',
-      telefono: '999888777',
-      password: 'fernandoadmin',
-      fecha_nacimiento: '1990-05-15'
+      numero_documento: '00000000',
+      email: 'admin@limpieza.com',
+      telefono: '999999999',
+      password: 'Admin2024!',
+      fecha_nacimiento: '1990-01-01'
     };
 
     // Validar que no exista el correo
@@ -36,9 +36,9 @@ async function crearAdmin() {
     // Crear usuario admin
     const result = await pool.query(
       `INSERT INTO usuarios (
-        nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, fecha_nacimiento
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING id, nombre, apellido, email, rol, verificado`,
+        nombre, apellido, tipo_documento, numero_documento, email, telefono, password, rol, verificado, estado_verificacion, fecha_nacimiento
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id, nombre, apellido, email, rol, verificado, estado_verificacion`,
       [
         adminData.nombre,
         adminData.apellido,
@@ -49,6 +49,7 @@ async function crearAdmin() {
         await bcrypt.hash(adminData.password, 10),
         'admin',             // ADMINISTRADOR
         true,                // Verificarlo por defecto
+        'aprobado',          // Estado de verificación aprobado
         adminData.fecha_nacimiento
       ]
     );

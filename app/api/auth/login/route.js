@@ -14,7 +14,7 @@ export async function POST(req) {
     }
 
     const userRes = await pool.query(
-      "SELECT id, nombre, apellido, email, rol, password, telefono, tipo_documento, numero_documento, zona_cobertura, anios_experiencia FROM usuarios WHERE email = $1",
+      "SELECT id, nombre, apellido, email, rol, password, telefono, tipo_documento, numero_documento, zona_cobertura, anios_experiencia, verificado, estado_verificacion, email_verified FROM usuarios WHERE email = $1",
       [email]
     );
     if (userRes.rows.length === 0) {
@@ -30,6 +30,26 @@ export async function POST(req) {
       return NextResponse.json(
         { error: "Usuario o contraseña incorrectos" },
         { status: 400 }
+      );
+    }
+
+    // Verificar si el correo ha sido confirmado
+    if (!user.email_verified) {
+      return NextResponse.json(
+        { error: "Por favor confirma tu correo electrónico antes de iniciar sesión." },
+        { status: 403 }
+      );
+    }
+
+    // Verificar si el personal está aprobado
+    if (user.rol === "personal" && user.estado_verificacion !== "aprobado") {
+      let mensaje = "Tu cuenta está pendiente de aprobación por un administrador.";
+      if (user.estado_verificacion === "rechazado") {
+        mensaje = "Tu cuenta ha sido rechazada. Contacta al administrador para más información.";
+      }
+      return NextResponse.json(
+        { error: mensaje },
+        { status: 403 }
       );
     }
 
