@@ -304,7 +304,7 @@ export default function Registro() {
             Información Profesional
           </h3>
           <label className="block text-xs text-gray-600 mb-1">
-            URL de tu Foto (Obligatorio)
+            foto de perfil(Obligatorio)
           </label>
           <input
             type="file"
