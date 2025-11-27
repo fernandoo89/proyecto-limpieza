@@ -77,15 +77,52 @@ Sigue estos pasos para configurar el proyecto en tu entorno local:
     Este proyecto incluye un archivo `schema.sql` para inicializar la base de datos.
 
     - Crea la base de datos en PostgreSQL (ej. `limpieza-db`).
-    - Ejecuta el script SQL para crear las tablas:
-
-    ``bash
-    psql -U postgres -d limpieza-db -f schema.sql
-    ```
+    
 
     *Alternativamente, puedes copiar el contenido de `schema.sql` y ejecutarlo en tu herramienta de administración de base de datos favorita (pgAdmin, DBeaver, TablePlus).*
+    -- Tabla de Usuarios
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    tipo_documento VARCHAR(20),
+    numero_documento VARCHAR(50),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    telefono VARCHAR(20),
+    password VARCHAR(255) NOT NULL,
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('cliente', 'personal', 'admin')),
+    verificado BOOLEAN DEFAULT false,
+    estado_verificacion VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'aprobado', 'rechazado'
+    fecha_nacimiento DATE,
+    foto_url TEXT,
+    anios_experiencia INTEGER,
+    zona_cobertura TEXT,
+    dni_foto_url TEXT,
+    antecedentes_url TEXT,
+    verification_token TEXT,
+    token_expiry TIMESTAMP,
+    email_verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
-5.  **Ejecutar el Servidor de Desarrollo**
+-- Tabla de Solicitudes
+CREATE TABLE IF NOT EXISTS solicitudes (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    direccion TEXT NOT NULL,
+    tipo_limpieza VARCHAR(50) NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    notas TEXT,
+    estado VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'aceptado', 'completado', 'cancelado'
+    personal_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    monto DECIMAL(10, 2),
+    metodo_pago VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+6.  **Ejecutar el Servidor de Desarrollo**
 
     ```bash
     npm run dev
