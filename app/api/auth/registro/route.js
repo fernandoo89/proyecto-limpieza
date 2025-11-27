@@ -58,13 +58,13 @@ export async function POST(req) {
     const password = formData.get("password");
     const fecha_nacimiento = formData.get("fecha_nacimiento");
     const rol = formData.get("rol");
-    const foto_url = formData.get("foto_url");
     const anios_experiencia = formData.get("anios_experiencia");
     const zona_cobertura = formData.get("zona_cobertura");
 
     // Archivos (solo para personal)
     const dni_foto = formData.get("dni_foto");
     const antecedentes = formData.get("antecedentes");
+    const foto_perfil = formData.get("foto_perfil");
 
     // Validar campos requeridos
     if (!nombre || !apellido || !email || !password || !telefono) {
@@ -80,9 +80,9 @@ export async function POST(req) {
     // Validaciones específicas para personal
     if (rolFinal === "personal") {
       // Validar que se hayan subido los documentos
-      if (!dni_foto || !antecedentes) {
+      if (!dni_foto || !antecedentes || !foto_perfil) {
         return NextResponse.json(
-          { error: "Debe subir foto de DNI y certificado de antecedentes" },
+          { error: "Debe subir foto de perfil, DNI y certificado de antecedentes" },
           { status: 400 }
         );
       }
@@ -128,17 +128,28 @@ export async function POST(req) {
         );
       }
 
-      if (!foto_url) {
+      // Validar tipo de archivo Foto Perfil
+      if (!validateFileType(foto_perfil)) {
         return NextResponse.json(
-          { error: "La foto es obligatoria para el personal" },
+          {
+            error:
+              "Tipo de archivo no válido para foto de perfil. Solo se permiten: JPG, JPEG, PNG",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validar tamaño de archivo Foto Perfil
+      if (!validateFileSize(foto_perfil)) {
+        return NextResponse.json(
+          { error: "La foto de perfil excede el tamaño máximo de 5MB" },
           { status: 400 }
         );
       }
     }
 
-    // Foto por defecto para cliente si no se envía
-    const fotoFinal =
-      foto_url ||
+    // Foto por defecto para cliente si no se envía (o si es personal se sobreescribirá abajo)
+    let fotoFinal =
       "https://ui-avatars.com/api/?name=" +
       encodeURIComponent(nombre + " " + apellido);
 
@@ -190,6 +201,30 @@ export async function POST(req) {
         );
         await writeFile(antecedentesPath, antecedentesBuffer);
         antecedentes_url = `/uploads/documentos/${antecedentesFilename}`;
+
+        // Guardar Foto Perfil
+        const perfilBytes = await foto_perfil.arrayBuffer();
+        const perfilBuffer = Buffer.from(perfilBytes);
+        const perfilFilename = generateUniqueFilename(foto_perfil.name);
+        // Usamos una carpeta específica para perfiles o la misma de documentos?
+        // El plan decía `public/uploads/perfiles`. Vamos a crearla si no existe o usar documentos por simplicidad si no queremos crear carpeta.
+        // Mejor usar `public/uploads/perfiles` para mantener orden.
+        // NOTA: Asegurarse que la carpeta exista. Node `writeFile` no crea directorios.
+        // Asumimos que `public/uploads` existe. Vamos a usar `public/uploads/documentos` para todo por ahora para evitar error de carpeta no existente,
+        // O mejor, usemos `public/uploads/documentos` que ya sabemos que funciona, o intentemos crearla.
+        // Dado que no tengo tool para crear directorio explícito aquí, usaré `public/uploads/documentos` para evitar fallos,
+        // O mejor, simplemente guardarlo en `public/uploads/documentos` y diferenciarlo por nombre si es necesario.
+        // Pero el usuario pidió "cambiarlo para el seleccione un archivo".
+        // Voy a guardarlo en `public/uploads/documentos` para asegurar que funcione sin crear directorios nuevos que podrían fallar si no tengo permisos o lógica de creación.
+        const perfilPath = join(
+          process.cwd(),
+          "public",
+          "uploads",
+          "documentos",
+          perfilFilename
+        );
+        await writeFile(perfilPath, perfilBuffer);
+        fotoFinal = `/uploads/documentos/${perfilFilename}`;
       } catch (fileError) {
         console.error("Error al guardar archivos:", fileError);
         return NextResponse.json(

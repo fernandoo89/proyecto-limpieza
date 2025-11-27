@@ -14,17 +14,19 @@ export default function Registro() {
     password2: "",
     fecha_nacimiento: "",
     rol: "cliente",
-    foto_url: "",
+    // foto_url ya no se usa como string directo del input, se usará para enviar la url si existe o se manejará el archivo
     anios_experiencia: "",
     zona_cobertura: "",
   });
   const [files, setFiles] = useState({
     dni_foto: null,
     antecedentes: null,
+    foto_perfil: null,
   });
   const [filePreviews, setFilePreviews] = useState({
     dni_foto: null,
     antecedentes: null,
+    foto_perfil: null,
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -39,8 +41,8 @@ export default function Registro() {
     setForm({ ...form, rol: role });
     // Limpiar archivos si cambia de personal a cliente
     if (role === "cliente") {
-      setFiles({ dni_foto: null, antecedentes: null });
-      setFilePreviews({ dni_foto: null, antecedentes: null });
+      setFiles({ dni_foto: null, antecedentes: null, foto_perfil: null });
+      setFilePreviews({ dni_foto: null, antecedentes: null, foto_perfil: null });
     }
   };
 
@@ -104,8 +106,8 @@ export default function Registro() {
 
     // Validar archivos para personal
     if (form.rol === "personal") {
-      if (!files.dni_foto || !files.antecedentes) {
-        setError("Debe subir la foto de DNI y el certificado de antecedentes");
+      if (!files.dni_foto || !files.antecedentes || !files.foto_perfil) {
+        setError("Debe subir la foto de perfil, DNI y el certificado de antecedentes");
         setLoading(false);
         return;
       }
@@ -123,7 +125,7 @@ export default function Registro() {
       formData.append("password", form.password);
       formData.append("fecha_nacimiento", form.fecha_nacimiento);
       formData.append("rol", form.rol);
-      formData.append("foto_url", form.foto_url);
+      // formData.append("foto_url", form.foto_url); // Ya no se envía URL manual
       formData.append("anios_experiencia", form.anios_experiencia);
       formData.append("zona_cobertura", form.zona_cobertura);
 
@@ -131,6 +133,7 @@ export default function Registro() {
       if (form.rol === "personal") {
         formData.append("dni_foto", files.dni_foto);
         formData.append("antecedentes", files.antecedentes);
+        formData.append("foto_perfil", files.foto_perfil);
       }
 
       const res = await fetch("/api/auth/registro", {
@@ -176,8 +179,8 @@ export default function Registro() {
         <div
           onClick={() => selectRole("cliente")}
           className={`flex-1 p-4 border rounded cursor-pointer text-center transition-all ${form.rol === "cliente"
-              ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
-              : "border-gray-200 hover:border-purple-300"
+            ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
+            : "border-gray-200 hover:border-purple-300"
             }`}
         >
           <div className="text-2xl mb-1">👤</div>
@@ -187,8 +190,8 @@ export default function Registro() {
         <div
           onClick={() => selectRole("personal")}
           className={`flex-1 p-4 border rounded cursor-pointer text-center transition-all ${form.rol === "personal"
-              ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
-              : "border-gray-200 hover:border-purple-300"
+            ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
+            : "border-gray-200 hover:border-purple-300"
             }`}
         >
           <div className="text-2xl mb-1">🧹</div>
@@ -304,12 +307,21 @@ export default function Registro() {
             URL de tu Foto (Obligatorio)
           </label>
           <input
-            name="foto_url"
-            placeholder="https://ejemplo.com/mifoto.jpg"
-            className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-            onChange={handleChange}
+            type="file"
+            accept=".jpg,.jpeg,.png"
+            onChange={(e) => handleFileChange(e, "foto_perfil")}
+            className="mb-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"
             required
           />
+          {filePreviews.foto_perfil && (
+            <div className="mb-3">
+              <img
+                src={filePreviews.foto_perfil}
+                alt="Preview Perfil"
+                className="w-24 h-24 object-cover rounded-full border-2 border-purple-200"
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs text-gray-600 mb-1">
