@@ -115,6 +115,33 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleEliminar = async (userId, nombre) => {
+        if (!confirm(`⚠️ ¿ELIMINAR PERMANENTEMENTE a ${nombre}?\n\nEsta acción:
+- Borrará al usuario de la base de datos
+- Eliminará sus archivos de Cloudinary
+- NO SE PUEDE DESHACER\n\n¿Estás seguro?`)) return;
+
+        try {
+            const res = await fetch("/api/admin/eliminar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${adminEmail}`,
+                },
+                body: JSON.stringify({ userId }),
+            });
+
+            if (!res.ok) {
+                throw new Error("Error al eliminar");
+            }
+
+            alert(`${nombre} ha sido eliminado permanentemente`);
+            fetchPersonalPendiente(adminEmail);
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         router.push("/login");
@@ -122,7 +149,20 @@ export default function AdminDashboard() {
 
     const verDocumento = (url) => {
         if (url) {
-            window.open(url, "_blank");
+            // Si es PDF, forzar descarga. Si es imagen, abrir en nueva pestaña
+            if (url.toLowerCase().includes('.pdf')) {
+                // Crear un enlace temporal para descargar
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = url.split('/').pop(); // Nombre del archivo
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                // Para imágenes, abrir normalmente
+                window.open(url, "_blank");
+            }
         } else {
             alert("Documento no disponible");
         }
@@ -246,6 +286,13 @@ export default function AdminDashboard() {
                                                     className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
                                                 >
                                                     ✗ Rechazar
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEliminar(persona.id, persona.nombre)}
+                                                    className="bg-gray-800 hover:bg-black text-white px-3 py-1 rounded transition-colors"
+                                                    title="Eliminar permanentemente (usuario + archivos)"
+                                                >
+                                                    🗑️ Eliminar
                                                 </button>
                                             </div>
                                         </td>

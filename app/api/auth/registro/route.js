@@ -5,6 +5,36 @@ import { writeFile } from "fs/promises";
 import { join } from "path";
 import { randomBytes } from "crypto";
 import nodemailer from "nodemailer";
+import { v2 as cloudinary } from "cloudinary";
+
+// Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Función helper para subir a Cloudinary
+async function uploadToCloudinary(file, folder) {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+}
 
 // Configuración de validación de archivos
 const ALLOWED_FILE_TYPES = [
@@ -174,61 +204,22 @@ export async function POST(req) {
     // Guardar archivos si es personal
     if (rolFinal === "personal") {
       try {
-        // Guardar DNI
-        const dniBytes = await dni_foto.arrayBuffer();
-        const dniBuffer = Buffer.from(dniBytes);
-        const dniFilename = generateUniqueFilename(dni_foto.name);
-        const dniPath = join(
-          process.cwd(),
-          "public",
-          "uploads",
-          "documentos",
-          dniFilename
-        );
-        await writeFile(dniPath, dniBuffer);
-        dni_foto_url = `/uploads/documentos/${dniFilename}`;
+        // Subir DNI
+        const dniResult = await uploadToCloudinary(dni_foto, "documentos");
+        dni_foto_url = dniResult.secure_url;
 
-        // Guardar Antecedentes
-        const antecedentesBytes = await antecedentes.arrayBuffer();
-        const antecedentesBuffer = Buffer.from(antecedentesBytes);
-        const antecedentesFilename = generateUniqueFilename(antecedentes.name);
-        const antecedentesPath = join(
-          process.cwd(),
-          "public",
-          "uploads",
-          "documentos",
-          antecedentesFilename
-        );
-        await writeFile(antecedentesPath, antecedentesBuffer);
-        antecedentes_url = `/uploads/documentos/${antecedentesFilename}`;
+        // Subir Antecedentes
+        const antecedentesResult = await uploadToCloudinary(antecedentes, "documentos");
+        antecedentes_url = antecedentesResult.secure_url;
 
-        // Guardar Foto Perfil
-        const perfilBytes = await foto_perfil.arrayBuffer();
-        const perfilBuffer = Buffer.from(perfilBytes);
-        const perfilFilename = generateUniqueFilename(foto_perfil.name);
-        // Usamos una carpeta específica para perfiles o la misma de documentos?
-        // El plan decía `public/uploads/perfiles`. Vamos a crearla si no existe o usar documentos por simplicidad si no queremos crear carpeta.
-        // Mejor usar `public/uploads/perfiles` para mantener orden.
-        // NOTA: Asegurarse que la carpeta exista. Node `writeFile` no crea directorios.
-        // Asumimos que `public/uploads` existe. Vamos a usar `public/uploads/documentos` para todo por ahora para evitar error de carpeta no existente,
-        // O mejor, usemos `public/uploads/documentos` que ya sabemos que funciona, o intentemos crearla.
-        // Dado que no tengo tool para crear directorio explícito aquí, usaré `public/uploads/documentos` para evitar fallos,
-        // O mejor, simplemente guardarlo en `public/uploads/documentos` y diferenciarlo por nombre si es necesario.
-        // Pero el usuario pidió "cambiarlo para el seleccione un archivo".
-        // Voy a guardarlo en `public/uploads/documentos` para asegurar que funcione sin crear directorios nuevos que podrían fallar si no tengo permisos o lógica de creación.
-        const perfilPath = join(
-          process.cwd(),
-          "public",
-          "uploads",
-          "documentos",
-          perfilFilename
-        );
-        await writeFile(perfilPath, perfilBuffer);
-        fotoFinal = `/uploads/documentos/${perfilFilename}`;
+        // Subir Foto Perfil
+        const perfilResult = await uploadToCloudinary(foto_perfil, "perfiles");
+        fotoFinal = perfilResult.secure_url;
+
       } catch (fileError) {
-        console.error("Error al guardar archivos:", fileError);
+        console.error("Error al subir archivos a Cloudinary:", fileError);
         return NextResponse.json(
-          { error: "Error al guardar los documentos" },
+          { error: "Error al guardar los documentos en la nube" },
           { status: 500 }
         );
       }
