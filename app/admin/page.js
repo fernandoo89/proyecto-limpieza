@@ -149,20 +149,15 @@ export default function AdminDashboard() {
 
     const verDocumento = (url) => {
         if (url) {
-            // Si es PDF, forzar descarga. Si es imagen, abrir en nueva pestaña
-            if (url.toLowerCase().includes('.pdf')) {
-                // Crear un enlace temporal para descargar
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = url.split('/').pop(); // Nombre del archivo
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // Para imágenes, abrir normalmente
-                window.open(url, "_blank");
+            // Corregir URLs de Cloudinary para PDFs
+            // Cambiar /image/upload/ a /raw/upload/ si es un PDF
+            let fixedUrl = url;
+            if (url.includes('.pdf') && url.includes('/image/upload/')) {
+                fixedUrl = url.replace('/image/upload/', '/raw/upload/');
             }
+
+            // Abrir tanto PDFs como imágenes en nueva pestaña
+            window.open(fixedUrl, "_blank");
         } else {
             alert("Documento no disponible");
         }

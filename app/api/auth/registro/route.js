@@ -19,10 +19,17 @@ async function uploadToCloudinary(file, folder) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
+  // Detectar si es PDF para usar el resource_type correcto
+  const isPDF = file.type === 'application/pdf';
+
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: folder,
+        resource_type: isPDF ? 'raw' : 'image', // 'raw' para PDFs, 'image' para imágenes
+        access_mode: 'public', // Asegura que el archivo sea público
+        type: 'upload', // Tipo de almacenamiento
+        flags: isPDF ? 'attachment' : undefined, // Fuerza descarga para PDFs si es necesario
       },
       (error, result) => {
         if (error) {
@@ -113,6 +120,14 @@ export async function POST(req) {
       if (!dni_foto || !antecedentes || !foto_perfil) {
         return NextResponse.json(
           { error: "Debe subir foto de perfil, DNI y certificado de antecedentes" },
+          { status: 400 }
+        );
+      }
+
+      // Validar años de experiencia (no negativos)
+      if (anios_experiencia && parseInt(anios_experiencia) < 0) {
+        return NextResponse.json(
+          { error: "Los años de experiencia no pueden ser negativos" },
           { status: 400 }
         );
       }

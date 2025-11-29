@@ -104,6 +104,13 @@ export default function Registro() {
       return;
     }
 
+    // Validar años de experiencia (no negativos) para personal
+    if (form.rol === "personal" && parseInt(form.anios_experiencia) < 0) {
+      setError("Los años de experiencia no pueden ser negativos");
+      setLoading(false);
+      return;
+    }
+
     // Validar archivos para personal
     if (form.rol === "personal") {
       if (!files.dni_foto || !files.antecedentes || !files.foto_perfil) {
@@ -333,6 +340,8 @@ export default function Registro() {
                 placeholder="Ej: 2"
                 className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
                 onChange={handleChange}
+                min="0"
+                title="Los años de experiencia no pueden ser negativos"
                 required
               />
             </div>
