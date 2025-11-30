@@ -13,23 +13,30 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
 // Función helper para subir a Cloudinary
 async function uploadToCloudinary(file, folder) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  // Detectar si es PDF para usar el resource_type correcto
+  // Detectar si es PDF
   const isPDF = file.type === 'application/pdf';
+
+  // Generar un public_id único si es PDF para asegurar la extensión
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(7);
+  // Limpiar el nombre original
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9]/g, "_").replace(/_pdf$/i, "");
+
+  // Para archivos PDF, usamos la extensión en el nombre
+  const publicId = isPDF ? `${cleanFileName}_${timestamp}_${randomStr}.pdf` : undefined;
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: folder,
-        resource_type: isPDF ? 'raw' : 'image', // 'raw' para PDFs, 'image' para imágenes
-        access_mode: 'public', // Asegura que el archivo sea público
-        type: 'upload', // Tipo de almacenamiento
-        flags: isPDF ? 'attachment' : undefined, // Fuerza descarga para PDFs si es necesario
+        resource_type: 'auto', // Dejar que Cloudinary detecte el tipo
+        public_id: publicId,
+        type: 'upload',
       },
       (error, result) => {
         if (error) {
