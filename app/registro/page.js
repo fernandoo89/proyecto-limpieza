@@ -17,6 +17,11 @@ export default function Registro() {
     // foto_url ya no se usa como string directo del input, se usará para enviar la url si existe o se manejará el archivo
     anios_experiencia: "",
     zona_cobertura: "",
+    // Campos de tarjeta
+    nombre_titular: "",
+    numero_tarjeta: "",
+    fecha_vencimiento: "",
+    cvc: "",
   });
   const [files, setFiles] = useState({
     dni_foto: null,
@@ -65,7 +70,7 @@ export default function Registro() {
 
     // Validar tipo
     if (!validateFileType(file)) {
-      setError(`Tipo de archivo no válido. Solo se permiten: JPG, JPEG, PNG, PDF`);
+      setError(`Tipo de archivo no válido. Solo se permiten: JPG, JPEG, PNG`);
       e.target.value = "";
       return;
     }
@@ -135,6 +140,14 @@ export default function Registro() {
       // formData.append("foto_url", form.foto_url); // Ya no se envía URL manual
       formData.append("anios_experiencia", form.anios_experiencia);
       formData.append("zona_cobertura", form.zona_cobertura);
+
+      // Agregar datos de tarjeta si es personal
+      if (form.rol === "personal") {
+        formData.append("nombre_titular", form.nombre_titular);
+        formData.append("numero_tarjeta", form.numero_tarjeta);
+        formData.append("fecha_vencimiento", form.fecha_vencimiento);
+        formData.append("cvc", form.cvc);
+      }
 
       // Agregar archivos si es personal
       if (form.rol === "personal") {
@@ -359,6 +372,68 @@ export default function Registro() {
             </div>
           </div>
 
+          {/* Datos de Tarjeta (Simulación) */}
+          <div className="mt-4 border-t pt-4 mb-4">
+            <h4 className="font-semibold text-purple-800 mb-3 text-sm flex items-center gap-2">
+              💳 Datos de Tarjeta (Simulación)
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">
+                  Nombre del Titular
+                </label>
+                <input
+                  name="nombre_titular"
+                  placeholder="Como aparece en la tarjeta"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">
+                  Número de Tarjeta
+                </label>
+                <input
+                  name="numero_tarjeta"
+                  placeholder="0000 0000 0000 0000"
+                  maxLength="19"
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Vencimiento (MM/YY)
+                  </label>
+                  <input
+                    name="fecha_vencimiento"
+                    placeholder="MM/YY"
+                    maxLength="5"
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    CVC
+                  </label>
+                  <input
+                    name="cvc"
+                    placeholder="123"
+                    maxLength="4"
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Subida de Documentos */}
           <div className="mt-4 border-t pt-4">
             <h4 className="font-semibold text-purple-800 mb-3 text-sm">
@@ -372,7 +447,7 @@ export default function Registro() {
               </label>
               <input
                 type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
+                accept=".jpg,.jpeg,.png"
                 onChange={(e) => handleFileChange(e, "dni_foto")}
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"
                 required
@@ -424,7 +499,7 @@ export default function Registro() {
             </div>
 
             <p className="text-xs text-gray-500 mt-2">
-              Formatos permitidos: JPG, JPEG, PNG, PDF (máx. 5MB)
+              Formatos permitidos: JPG, JPEG, PNG (máx. 5MB)
             </p>
           </div>
         </div>

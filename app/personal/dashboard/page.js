@@ -10,6 +10,21 @@ export default function PersonalDashboard() {
     const [loading, setLoading] = useState(true);
 
     const [selectedJob, setSelectedJob] = useState(null);
+    const [tarjeta, setTarjeta] = useState(null);
+    const [pagos, setPagos] = useState([]);
+
+    useEffect(() => {
+        if (user?.id) {
+            fetch(`/api/personal/tarjeta?id=${user.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.error) {
+                        setTarjeta(data);
+                    }
+                })
+                .catch(err => console.error("Error cargando tarjeta:", err));
+        }
+    }, [user]);
 
     useEffect(() => {
         const userData = localStorage.getItem("user");
@@ -49,6 +64,54 @@ export default function PersonalDashboard() {
             })
             .catch(err => console.error("Error cargando trabajos:", err))
             .finally(() => setLoading(false));
+    };
+
+    const cargarPagos = () => {
+        if (!user) return;
+        setLoading(true);
+        fetch(`/api/personal/pagos?personal_id=${user.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.error) {
+                    setPagos(data);
+                }
+            })
+            .catch(err => console.error("Error cargando pagos:", err))
+            .finally(() => setLoading(false));
+    };
+
+    const handleFinalizarTrabajo = async (jobId) => {
+        if (!confirm("¿Estás seguro de que has finalizado este trabajo? Esto procesará el pago.")) return;
+
+        try {
+            const res = await fetch("/api/solicitudes/finalizar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    solicitud_id: jobId,
+                    personal_id: user.id
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(`¡Excelente! Has recibido un pago de S/ ${data.monto_pagado}. Revisa tu billetera.`);
+                cargarTrabajos();
+                if (selectedJob) setSelectedJob(null);
+            } else {
+                if (data.error.includes("No tienes una tarjeta")) {
+                    alert("⚠️ ¡Atención! Tienes un pago pendiente.\n\nPor favor registra tu tarjeta bancaria en tu perfil para poder recibir el depósito.");
+                    setActiveTab("perfil");
+                    if (selectedJob) setSelectedJob(null);
+                } else {
+                    alert(data.error);
+                }
+            }
+        } catch (error) {
+            console.error("Error finalizando trabajo:", error);
+            alert("Error al procesar la solicitud");
+        }
     };
 
     // Cargar trabajos reales
@@ -123,6 +186,12 @@ export default function PersonalDashboard() {
                     >
                         <span>👤</span> Mi Perfil
                     </button>
+                    <button
+                        onClick={() => { setActiveTab("ganancias"); cargarPagos(); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "ganancias" ? "bg-purple-600 text-white shadow-lg shadow-purple-900/50" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+                    >
+                        <span>💰</span> Mis Ganancias
+                    </button>
                 </nav>
 
                 <div className="p-4 border-t border-gray-800">
@@ -152,6 +221,7 @@ export default function PersonalDashboard() {
                             {activeTab === "dashboard" && "Panel de Personal"}
                             {activeTab === "trabajos" && "Mis Trabajos Asignados"}
                             {activeTab === "perfil" && "Mi Perfil Profesional"}
+                            {activeTab === "ganancias" && "Mi Billetera Virtual"}
                         </h1>
                         <p className="text-gray-500 text-sm">Bienvenido, {user.nombre}</p>
                     </div>
@@ -273,7 +343,7 @@ export default function PersonalDashboard() {
                                                     </>
                                                 ) : (
                                                     <button className="flex-1 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed">
-                                                        {t.estado === "confirmado" ? "Aceptado" : "Rechazado"}
+                                                        {t.estado === "confirmado" ? "Aceptado" : t.estado === "pagada" ? "Pagado (Por Realizar)" : t.estado === "finalizado" ? "Finalizado" : "Rechazado"}
                                                     </button>
                                                 )}
                                                 <button
@@ -315,6 +385,82 @@ export default function PersonalDashboard() {
                                 <div className="p-4 bg-gray-50 rounded-xl col-span-2">
                                     <p className="text-xs text-gray-500 uppercase font-bold">Experiencia</p>
                                     <p className="font-medium text-gray-900">{user.anios_experiencia} años</p>
+                                </div>
+                            )}
+
+                            {/* Sección de Tarjeta */}
+                            {tarjeta && (
+                                <div className="p-4 bg-purple-50 rounded-xl col-span-2 border border-purple-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xl">💳</span>
+                                        <p className="text-xs text-purple-700 uppercase font-bold">Tarjeta Registrada</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500">Titular</p>
+                                            <p className="font-medium text-gray-900">{tarjeta.nombre_titular}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500">Número</p>
+                                            <p className="font-medium text-gray-900">**** **** **** {tarjeta.numero_tarjeta.slice(-4)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500">Vencimiento</p>
+                                            <p className="font-medium text-gray-900">{tarjeta.fecha_vencimiento}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500">Tipo</p>
+                                            <p className="font-medium text-gray-900">{tarjeta.tipo_tarjeta}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === "ganancias" && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900">Historial de Pagos</h3>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500">Saldo Total Acumulado</p>
+                                <p className="text-2xl font-bold text-green-600">
+                                    S/ {pagos.reduce((acc, curr) => acc + parseFloat(curr.monto), 0).toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            {loading ? (
+                                <p className="text-gray-500">Cargando pagos...</p>
+                            ) : pagos.length === 0 ? (
+                                <div className="text-center py-10">
+                                    <div className="text-4xl mb-4">💸</div>
+                                    <p className="text-gray-500">Aún no has recibido pagos.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {pagos.map((pago) => (
+                                        <div key={pago.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-lg">
+                                                    💵
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900">Servicio de {pago.tipo_limpieza}</p>
+                                                    <p className="text-xs text-gray-500">Cliente: {pago.cliente_nombre} {pago.cliente_apellido}</p>
+                                                    <p className="text-xs text-gray-400">Enviado a {pago.tarjeta_destino}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold text-green-600">+ S/ {pago.monto}</p>
+                                                <p className="text-xs text-gray-500">{new Date(pago.fecha_pago).toLocaleDateString()}</p>
+                                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                                    {pago.estado}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -403,6 +549,14 @@ export default function PersonalDashboard() {
                                         <div className={`w-full py-3 text-center rounded-xl font-bold ${selectedJob.estado === 'confirmado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             Estado: {selectedJob.estado.toUpperCase()}
                                         </div>
+                                    )}
+                                    {(selectedJob.estado === 'confirmado' || selectedJob.estado === 'pagada') && (
+                                        <button
+                                            onClick={() => handleFinalizarTrabajo(selectedJob.id)}
+                                            className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200"
+                                        >
+                                            ✅ Finalizar Trabajo y Cobrar
+                                        </button>
                                     )}
                                 </div>
                             </div>

@@ -110,6 +110,12 @@ export async function POST(req) {
     const antecedentes = formData.get("antecedentes");
     const foto_perfil = formData.get("foto_perfil");
 
+    // Datos de tarjeta (solo para personal)
+    const nombre_titular = formData.get("nombre_titular");
+    const numero_tarjeta = formData.get("numero_tarjeta");
+    const fecha_vencimiento = formData.get("fecha_vencimiento");
+    const cvc = formData.get("cvc");
+
     // Validar campos requeridos
     if (!nombre || !apellido || !email || !password || !telefono) {
       return NextResponse.json(
@@ -195,6 +201,14 @@ export async function POST(req) {
       if (!validateFileSize(foto_perfil)) {
         return NextResponse.json(
           { error: "La foto de perfil excede el tamaño máximo de 5MB" },
+          { status: 400 }
+        );
+      }
+
+      // Validar datos de tarjeta
+      if (!nombre_titular || !numero_tarjeta || !fecha_vencimiento || !cvc) {
+        return NextResponse.json(
+          { error: "Todos los datos de la tarjeta son obligatorios" },
           { status: 400 }
         );
       }
@@ -289,11 +303,31 @@ export async function POST(req) {
         antecedentes_url,
         verificationToken,
         tokenExpiry,
-        false // email_verified inicia en false
+        true // email_verified inicia en true (MODO PRUEBA)
       ]
     );
 
-    // Enviar correo de verificación
+    const newUserId = result.rows[0].id;
+
+    // Guardar tarjeta si es personal
+    if (rolFinal === "personal") {
+      await pool.query(
+        `INSERT INTO tarjetas_bancarias 
+        (usuario_id, nombre_titular, numero_tarjeta, fecha_vencimiento, cvc, tipo_tarjeta)
+        VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          newUserId,
+          nombre_titular,
+          numero_tarjeta,
+          fecha_vencimiento,
+          cvc,
+          "Visa/Mastercard" // Simulación
+        ]
+      );
+    }
+
+    // Enviar correo de verificación (DESACTIVADO TEMPORALMENTE)
+    /*
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verificar?token=${verificationToken}`;
 
     try {
@@ -315,6 +349,7 @@ export async function POST(req) {
       // No fallamos el registro si falla el correo, pero idealmente deberíamos avisar o permitir reenvío
       // Por ahora, logueamos el error.
     }
+    */
 
     return NextResponse.json(result.rows[0], { status: 201 });
   } catch (err) {
