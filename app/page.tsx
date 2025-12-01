@@ -1,25 +1,42 @@
 "use client";
-import { useEffect, useState } from "react";
 
-type Personal = {
-  id: number;
-  nombre: string;
-  apellido: string;
-  foto_url?: string;
-  anios_experiencia?: number;
-  zona_cobertura?: string;
-};
+// Perfiles de demostración para la landing page
+const PERSONAL_DEMO = [
+  {
+    id: 1,
+    nombre: "Rosa",
+    apellido: "Martínez",
+    foto_url: "https://i.pravatar.cc/150?img=47",
+    anios_experiencia: 8,
+    zona_cobertura: "San Isidro, Miraflores"
+  },
+  {
+    id: 2,
+    nombre: "Carmen",
+    apellido: "López",
+    foto_url: "https://i.pravatar.cc/150?img=45",
+    anios_experiencia: 5,
+    zona_cobertura: "Surco, La Molina"
+  },
+  {
+    id: 3,
+    nombre: "Lucía",
+    apellido: "Fernández",
+    foto_url: "https://i.pravatar.cc/150?img=44",
+    anios_experiencia: 12,
+    zona_cobertura: "San Borja, Surco"
+  },
+  {
+    id: 4,
+    nombre: "Patricia",
+    apellido: "Rojas",
+    foto_url: "https://i.pravatar.cc/150?img=32",
+    anios_experiencia: 6,
+    zona_cobertura: "Jesús María, Lince"
+  }
+];
 
 export default function Home() {
-  // INDICA el tipo del array: Personal[]
-  const [personal, setPersonal] = useState<Personal[]>([]);
-
-  useEffect(() => {
-    fetch("/api/personal")
-      .then((res) => res.json())
-      .then(setPersonal)
-      .catch(() => setPersonal([]));
-  }, []);
 
   return (
     <main className="min-h-screen bg-gray-50 font-sans text-gray-900">
@@ -105,6 +122,154 @@ export default function Home() {
         </div>
       </section>
 
+      {/* HOW IT WORKS SECTION */}
+      <section id="como-funciona" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">¿Cómo funciona?</h2>
+            <p className="text-gray-600">Solicitar un servicio de limpieza nunca fue tan fácil. Solo 3 pasos y listo.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connecting Line */}
+            <div className="hidden md:block absolute top-16 left-0 right-0 h-1 bg-gradient-to-r from-purple-200 via-purple-400 to-purple-200 -z-10"></div>
+
+            {[
+              {
+                step: "1",
+                title: "Solicita tu servicio",
+                desc: "Completa el formulario con los detalles de tu necesidad: tipo de limpieza, fecha, hora y dirección.",
+                icon: "📝",
+                color: "purple"
+              },
+              {
+                step: "2",
+                title: "Confirmamos y asignamos",
+                desc: "Nuestro personal verificado acepta tu solicitud. Recibes confirmación inmediata con los datos del profesional.",
+                icon: "✅",
+                color: "blue"
+              },
+              {
+                step: "3",
+                title: "Disfruta tu hogar limpio",
+                desc: "El profesional llega puntual, realiza el servicio y tú disfrutas de un hogar impecable sin preocupaciones.",
+                icon: "✨",
+                color: "green"
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="relative">
+                <div className="bg-white p-8 rounded-2xl border-2 border-gray-100 hover:border-purple-200 transition-all hover:shadow-lg group">
+                  <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-${item.color}-500 to-${item.color}-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                    {item.step}
+                  </div>
+                  <div className="text-5xl mb-4 text-center mt-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">{item.title}</h3>
+                  <p className="text-gray-600 text-center leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <a href="/solicitar" className="inline-flex items-center gap-2 px-8 py-4 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition-all shadow-lg hover:shadow-xl">
+              Solicitar ahora
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS SECTION */}
+      <section id="beneficios" className="py-20 bg-gradient-to-br from-purple-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">¿Por qué elegir PeruLimpio?</h2>
+            <p className="text-gray-600">Más que un servicio de limpieza, somos tu aliado de confianza para el cuidado de tu hogar.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "Personal Verificado", desc: "Todos nuestros profesionales pasan por rigurosos controles de antecedentes y entrevistas.", icon: "🔒", gradient: "from-purple-500 to-purple-600" },
+              { title: "Pago Seguro", desc: "Procesamos pagos de forma segura. Tu información financiera está protegida.", icon: "💳", gradient: "from-blue-500 to-blue-600" },
+              { title: "Flexibilidad Total", desc: "Elige la fecha y hora que mejor te convenga. Nos adaptamos a tu agenda.", icon: "📅", gradient: "from-green-500 to-green-600" },
+              { title: "Calidad Garantizada", desc: "Si no quedas satisfecho, volvemos sin costo adicional.", icon: "⭐", gradient: "from-yellow-500 to-yellow-600" },
+              { title: "Atención 24/7", desc: "Nuestro equipo de soporte está disponible para ayudarte en cualquier momento.", icon: "💬", gradient: "from-pink-500 to-pink-600" },
+              { title: "Precios Transparentes", desc: "Sin sorpresas. El precio que ves es el precio que pagas.", icon: "💰", gradient: "from-indigo-500 to-indigo-600" }
+            ].map((benefit, idx) => (
+              <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 group">
+                <div className={`w-14 h-14 bg-gradient-to-br ${benefit.gradient} rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                  {benefit.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{benefit.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Lo que dicen nuestros clientes</h2>
+            <p className="text-gray-600">Miles de hogares confían en nosotros. Lee sus experiencias.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "María González",
+                role: "Ama de casa",
+                avatar: "https://i.pravatar.cc/100?img=5",
+                rating: 5,
+                text: "Increíble servicio. El personal es muy profesional y mi casa quedó impecable. Lo mejor es la tranquilidad de saber que son personas verificadas.",
+                date: "Hace 2 semanas"
+              },
+              {
+                name: "Carlos Ramírez",
+                role: "Empresario",
+                avatar: "https://i.pravatar.cc/100?img=12",
+                rating: 5,
+                text: "Uso PeruLimpio cada semana para mi oficina. Siempre puntuales, siempre profesionales. El proceso de pago es súper fácil y seguro.",
+                date: "Hace 1 mes"
+              },
+              {
+                name: "Ana Flores",
+                role: "Profesora",
+                avatar: "https://i.pravatar.cc/100?img=9",
+                rating: 5,
+                text: "Como madre soltera, necesitaba ayuda confiable. PeruLimpio me dio esa tranquilidad. La persona que viene es como de la familia ya.",
+                date: "Hace 3 días"
+              }
+            ].map((testimonial, idx) => (
+              <div key={idx} className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-purple-200 transition-all hover:shadow-lg group">
+                <div className="flex items-center gap-4 mb-6">
+                  <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="w-14 h-14 rounded-full border-2 border-purple-100 group-hover:border-purple-300 transition-colors"
+                  />
+                  <div>
+                    <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-500">{testimonial.role}</p>
+                  </div>
+                </div>
+                <div className="flex text-yellow-400 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <span key={i}>★</span>
+                  ))}
+                </div>
+                <p className="text-gray-700 leading-relaxed mb-4 italic">"{testimonial.text}"</p>
+                <p className="text-xs text-gray-400">{testimonial.date}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 border border-green-100 rounded-full">
+              <span className="text-2xl">🎉</span>
+              <span className="text-green-700 font-semibold">Más de 500 clientes satisfechos</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FEATURES / SECURITY SECTION */}
       <section id="seguridad" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -132,34 +297,31 @@ export default function Home() {
       <section id="nosotros" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-gray-900 text-center">Conoce a nuestro equipo estrella</h2>
-          {personal.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
-              <p className="text-gray-500">Cargando perfiles destacados...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {personal.slice(0, 4).map((p) => (
-                <div key={p.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-center group">
-                  <div className="relative w-24 h-24 mx-auto mb-4">
-                    <img
-                      src={p.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nombre + " " + p.apellido)}&background=random`}
-                      alt={`Foto de ${p.nombre}`}
-                      className="w-full h-full object-cover rounded-full border-4 border-purple-50 group-hover:border-purple-100 transition-colors"
-                    />
-                    <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center text-white text-[10px]">✓</div>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">{p.nombre} {p.apellido}</h3>
-                  <div className="flex justify-center gap-1 text-yellow-400 text-sm my-2">★★★★★</div>
-                  <p className="text-gray-500 text-sm mb-3">
-                    {p.anios_experiencia ? `${p.anios_experiencia} años de experiencia` : "Experta en limpieza"}
-                  </p>
-                  <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    {p.zona_cobertura || "Lima Metropolitana"}
-                  </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {PERSONAL_DEMO.map((p) => (
+              <div key={p.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-center group">
+                <div className="relative w-24 h-24 mx-auto mb-4">
+                  <img
+                    src={p.foto_url}
+                    alt={`Foto de ${p.nombre}`}
+                    className="w-full h-full object-cover rounded-full border-4 border-purple-50 group-hover:border-purple-100 transition-colors"
+                  />
+                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full flex items-center justify-center text-white text-[10px]">✓</div>
                 </div>
-              ))}
-            </div>
-          )}
+                <h3 className="text-lg font-bold text-gray-900">{p.nombre} {p.apellido}</h3>
+                <div className="flex justify-center gap-1 text-yellow-400 text-sm my-2">★★★★★</div>
+                <p className="text-gray-500 text-sm mb-3">
+                  {p.anios_experiencia} años de experiencia
+                </p>
+                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  {p.zona_cobertura}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-xs text-gray-400 italic">* Perfiles de demostración</p>
+          </div>
           <div className="text-center mt-12">
             <a href="/registro" className="text-purple-600 font-semibold hover:text-purple-700 flex items-center justify-center gap-2">
               Ver todos los profesionales <span aria-hidden="true">→</span>
