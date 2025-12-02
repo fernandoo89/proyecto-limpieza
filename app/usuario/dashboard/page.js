@@ -3,10 +3,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const PRECIOS_LIMPIEZA = {
-  Profunda: 80,
-  Ligera: 40,
-  "Desinfección": 60,
-  Mantenimiento: 30,
+  "Pack Express (4h)": 99,
+  "Pack Estándar (6h)": 109,
+  "Pack Premium (8h)": 119,
 };
 
 export default function UsuarioDashboard() {
@@ -15,7 +14,7 @@ export default function UsuarioDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [form, setForm] = useState({
     direccion: "",
-    tipo_limpieza: "Profunda",
+    tipo_limpieza: "Pack Estándar (6h)",
     fecha: "",
     hora: "",
     notas: "",
@@ -78,6 +77,47 @@ export default function UsuarioDashboard() {
     await fetchSolicitudes(user.id);
   };
 
+  const [showCalificarModal, setShowCalificarModal] = useState(false);
+  const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+  const [calificacionForm, setCalificacionForm] = useState({ rating: 5, comentario: "" });
+
+  const openCalificarModal = (solicitud) => {
+    setSelectedSolicitud(solicitud);
+    setCalificacionForm({ rating: 5, comentario: "" });
+    setShowCalificarModal(true);
+  };
+
+  const submitCalificacion = async (e) => {
+    e.preventDefault();
+    if (!selectedSolicitud) return;
+
+    try {
+      const res = await fetch("/api/calificaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          solicitud_id: selectedSolicitud.id,
+          cliente_id: user.id,
+          personal_id: selectedSolicitud.personal_id, // Asegúrate de que tu backend devuelva esto en /api/solicitudes/usuario
+          calificacion: calificacionForm.rating,
+          comentario: calificacionForm.comentario
+        }),
+      });
+
+      if (res.ok) {
+        alert("¡Gracias por tu calificación!");
+        setShowCalificarModal(false);
+        // Opcional: Actualizar estado local para quitar botón
+      } else {
+        const data = await res.json();
+        alert(data.error || "Error al calificar");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al enviar calificación");
+    }
+  };
+
   if (!user) {
     return <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">Cargando...</div>;
   }
@@ -138,7 +178,7 @@ export default function UsuarioDashboard() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-64 p-8 relative">
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -213,6 +253,14 @@ export default function UsuarioDashboard() {
                             className="px-3 py-1 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
                           >
                             Pagar
+                          </button>
+                        )}
+                        {s.estado === "finalizado" && (
+                          <button
+                            onClick={() => openCalificarModal(s)}
+                            className="px-3 py-1 bg-yellow-500 text-white text-xs rounded-lg hover:bg-yellow-600 transition-colors"
+                          >
+                            Calificar
                           </button>
                         )}
                       </div>
@@ -326,6 +374,57 @@ export default function UsuarioDashboard() {
                 <p className="text-xs text-gray-500 uppercase font-bold">Documento</p>
                 <p className="font-medium text-gray-900">{user.tipo_documento} - {user.numero_documento}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL DE CALIFICACIÓN */}
+        {showCalificarModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+              <h3 className="text-xl font-bold mb-4 text-center">Calificar Servicio</h3>
+              <p className="text-gray-600 text-center mb-6">¿Qué tal estuvo el servicio de limpieza?</p>
+
+              <form onSubmit={submitCalificacion}>
+                <div className="flex justify-center gap-2 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setCalificacionForm({ ...calificacionForm, rating: star })}
+                      className={`text-3xl transition-transform hover:scale-110 ${star <= calificacionForm.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Comentario (Opcional)</label>
+                  <textarea
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none h-24"
+                    placeholder="Escribe tu opinión aquí..."
+                    value={calificacionForm.comentario}
+                    onChange={(e) => setCalificacionForm({ ...calificacionForm, comentario: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCalificarModal(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors"
+                  >
+                    Enviar
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

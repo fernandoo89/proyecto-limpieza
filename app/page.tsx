@@ -122,6 +122,69 @@ export default function Home() {
         </div>
       </section>
 
+      {/* PRICING SECTION (Recommended Plans) */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Elige el servicio a tu medida</h2>
+            <p className="text-gray-600">Paquetes diseñados para cada necesidad. Sin costos ocultos.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Card 1: Express */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-200 hover:border-purple-200 transition-all hover:shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Pack Express</h3>
+              <p className="text-gray-500 text-sm mb-6">Ideal para departamentos pequeños o mantenimiento.</p>
+              <div className="text-4xl font-bold text-gray-900 mb-2">S/ 99</div>
+              <p className="text-gray-400 text-sm mb-8">4 horas de servicio</p>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Limpieza general</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> 1 baño y cocina</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Productos básicos</li>
+              </ul>
+              <a href="/registro" className="block w-full py-3 px-6 text-center border-2 border-gray-900 text-gray-900 font-bold rounded-xl hover:bg-gray-900 hover:text-white transition-all">
+                Reservar
+              </a>
+            </div>
+
+            {/* Card 2: Standard (Popular) */}
+            <div className="relative bg-white p-8 rounded-2xl border-2 border-purple-500 shadow-xl transform md:-translate-y-4">
+              <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase tracking-wider">
+                Más Popular
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Pack Estándar</h3>
+              <p className="text-gray-500 text-sm mb-6">El favorito para familias y casas medianas.</p>
+              <div className="text-4xl font-bold text-purple-600 mb-2">S/ 109</div>
+              <p className="text-gray-400 text-sm mb-8">6 horas de servicio</p>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Limpieza profunda</li>
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Hasta 2 baños</li>
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Desinfección completa</li>
+              </ul>
+              <a href="/registro" className="block w-full py-3 px-6 text-center bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200">
+                Reservar
+              </a>
+            </div>
+
+            {/* Card 3: Premium */}
+            <div className="bg-white p-8 rounded-2xl border border-gray-200 hover:border-purple-200 transition-all hover:shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Pack Premium</h3>
+              <p className="text-gray-500 text-sm mb-6">Para casas grandes o limpieza exhaustiva.</p>
+              <div className="text-4xl font-bold text-gray-900 mb-2">S/ 119</div>
+              <p className="text-gray-400 text-sm mb-8">7 horas de servicio</p>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Todo incluido</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Limpieza de ventanas</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span> Planchado básico</li>
+              </ul>
+              <a href="/registro" className="block w-full py-3 px-6 text-center border-2 border-gray-900 text-gray-900 font-bold rounded-xl hover:bg-gray-900 hover:text-white transition-all">
+                Reservar
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* HOW IT WORKS SECTION */}
       <section id="como-funciona" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">

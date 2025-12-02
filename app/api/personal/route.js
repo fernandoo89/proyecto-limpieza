@@ -58,9 +58,20 @@ export async function POST(request) {
 export async function GET() {
   try {
     const result = await pool.query(
-      `SELECT id, nombre, apellido, foto_url, anios_experiencia, zona_cobertura
-       FROM usuarios
-       WHERE rol = 'personal'`
+      `SELECT 
+        u.id, 
+        u.nombre, 
+        u.apellido, 
+        u.foto_url, 
+        u.anios_experiencia, 
+        u.zona_cobertura,
+        u.verificado,
+        COALESCE(AVG(c.calificacion), 0) as promedio_calificacion,
+        COUNT(c.id) as total_resenas
+       FROM usuarios u
+       LEFT JOIN calificaciones c ON u.id = c.personal_id
+       WHERE u.rol = 'personal'
+       GROUP BY u.id`
     );
     return new Response(JSON.stringify(result.rows), { status: 200 });
   } catch (err) {
