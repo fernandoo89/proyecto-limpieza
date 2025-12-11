@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Registro() {
   const [form, setForm] = useState({
@@ -14,10 +15,8 @@ export default function Registro() {
     password2: "",
     fecha_nacimiento: "",
     rol: "cliente",
-    // foto_url ya no se usa como string directo del input, se usará para enviar la url si existe o se manejará el archivo
     anios_experiencia: "",
     zona_cobertura: "",
-    // Campos de tarjeta
     nombre_titular: "",
     numero_tarjeta: "",
     fecha_vencimiento: "",
@@ -44,38 +43,32 @@ export default function Registro() {
 
   const selectRole = (role) => {
     setForm({ ...form, rol: role });
-    // Limpiar archivos si cambia de personal a cliente
     if (role === "cliente") {
       setFiles({ dni_foto: null, antecedentes: null, foto_perfil: null });
       setFilePreviews({ dni_foto: null, antecedentes: null, foto_perfil: null });
     }
   };
 
-  // Validar tipo de archivo
   const validateFileType = (file) => {
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
     return allowedTypes.includes(file.type);
   };
 
-  // Validar tamaño de archivo (max 5MB)
   const validateFileSize = (file) => {
     const maxSize = 5 * 1024 * 1024; // 5MB
     return file.size <= maxSize;
   };
 
-  // Manejar cambio de archivo
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validar tipo
     if (!validateFileType(file)) {
       setError(`Tipo de archivo no válido. Solo se permiten: JPG, JPEG, PNG`);
       e.target.value = "";
       return;
     }
 
-    // Validar tamaño
     if (!validateFileSize(file)) {
       setError(`El archivo excede el tamaño máximo de 5MB`);
       e.target.value = "";
@@ -85,15 +78,14 @@ export default function Registro() {
     setError("");
     setFiles({ ...files, [fieldName]: file });
 
-    // Crear preview si es imagen
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFilePreviews({ ...filePreviews, [fieldName]: reader.result });
+        setFilePreviews((prev) => ({ ...prev, [fieldName]: reader.result }));
       };
       reader.readAsDataURL(file);
     } else {
-      setFilePreviews({ ...filePreviews, [fieldName]: "pdf" });
+      setFilePreviews((prev) => ({ ...prev, [fieldName]: "pdf" }));
     }
   };
 
@@ -109,14 +101,12 @@ export default function Registro() {
       return;
     }
 
-    // Validar años de experiencia (no negativos) para personal
     if (form.rol === "personal" && parseInt(form.anios_experiencia) < 0) {
       setError("Los años de experiencia no pueden ser negativos");
       setLoading(false);
       return;
     }
 
-    // Validar archivos para personal
     if (form.rol === "personal") {
       if (!files.dni_foto || !files.antecedentes || !files.foto_perfil) {
         setError("Debe subir la foto de perfil, DNI y el certificado de antecedentes");
@@ -126,30 +116,9 @@ export default function Registro() {
     }
 
     try {
-      // Crear FormData
       const formData = new FormData();
-      formData.append("nombre", form.nombre);
-      formData.append("apellido", form.apellido);
-      formData.append("tipo_documento", form.tipo_documento);
-      formData.append("numero_documento", form.numero_documento);
-      formData.append("email", form.email);
-      formData.append("telefono", form.telefono);
-      formData.append("password", form.password);
-      formData.append("fecha_nacimiento", form.fecha_nacimiento);
-      formData.append("rol", form.rol);
-      // formData.append("foto_url", form.foto_url); // Ya no se envía URL manual
-      formData.append("anios_experiencia", form.anios_experiencia);
-      formData.append("zona_cobertura", form.zona_cobertura);
+      Object.keys(form).forEach(key => formData.append(key, form[key]));
 
-      // Agregar datos de tarjeta si es personal
-      if (form.rol === "personal") {
-        formData.append("nombre_titular", form.nombre_titular);
-        formData.append("numero_tarjeta", form.numero_tarjeta);
-        formData.append("fecha_vencimiento", form.fecha_vencimiento);
-        formData.append("cvc", form.cvc);
-      }
-
-      // Agregar archivos si es personal
       if (form.rol === "personal") {
         formData.append("dni_foto", files.dni_foto);
         formData.append("antecedentes", files.antecedentes);
@@ -158,7 +127,7 @@ export default function Registro() {
 
       const res = await fetch("/api/auth/registro", {
         method: "POST",
-        body: formData, // No establecer Content-Type, el navegador lo hace automáticamente
+        body: formData,
       });
       const data = await res.json();
 
@@ -168,13 +137,11 @@ export default function Registro() {
         return;
       }
 
-      if (form.rol === "personal") {
-        setSuccess(
-          "¡Registro exitoso! Tu cuenta está pendiente de aprobación por un administrador. Redirigiendo..."
-        );
-      } else {
-        setSuccess("¡Usuario creado correctamente! Redirigiendo...");
-      }
+      setSuccess(
+        form.rol === "personal"
+          ? "¡Registro exitoso! Tu cuenta está pendiente de aprobación. Redirigiendo..."
+          : "¡Usuario creado correctamente! Redirigiendo..."
+      );
 
       setTimeout(() => {
         router.push("/login");
@@ -186,341 +153,209 @@ export default function Registro() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md mx-auto bg-white p-8 rounded shadow mt-8 mb-8"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">
-        Crear Una Cuenta
-      </h2>
-
-      {/* Selección de Rol */}
-      <div className="flex gap-4 mb-6">
-        <div
-          onClick={() => selectRole("cliente")}
-          className={`flex-1 p-4 border rounded cursor-pointer text-center transition-all ${form.rol === "cliente"
-            ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
-            : "border-gray-200 hover:border-purple-300"
-            }`}
-        >
-          <div className="text-2xl mb-1">👤</div>
-          <div className="font-semibold text-gray-700">Cliente</div>
-          <div className="text-xs text-gray-500">Busco limpieza</div>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center">
+      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <div className="bg-slate-900 p-8 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-slate-900 opacity-90"></div>
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-white mb-2">Crear una Cuenta</h2>
+            <p className="text-blue-100">Únete a nuestra plataforma de servicios de confianza</p>
+          </div>
         </div>
-        <div
-          onClick={() => selectRole("personal")}
-          className={`flex-1 p-4 border rounded cursor-pointer text-center transition-all ${form.rol === "personal"
-            ? "border-purple-600 bg-purple-50 ring-2 ring-purple-600"
-            : "border-gray-200 hover:border-purple-300"
-            }`}
-        >
-          <div className="text-2xl mb-1">🧹</div>
-          <div className="font-semibold text-gray-700">Personal</div>
-          <div className="text-xs text-gray-500">Quiero trabajar</div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="nombre"
-          placeholder="Nombre"
-          className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="apellido"
-          placeholder="Apellido"
-          className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-          onChange={handleChange}
-          required
-        />
-      </div>
+        <form onSubmit={handleSubmit} className="p-8 lg:p-10">
 
-      <select
-        name="tipo_documento"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      >
-        <option value="">Tipo de documento</option>
-        <option value="DNI">DNI</option>
-        <option value="CE">Carnet Extranjería</option>
-        <option value="Pasaporte">Pasaporte</option>
-      </select>
-      <input
-        name="numero_documento"
-        placeholder="Nro. de documento"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
-      <input
-        name="email"
-        type="email"
-        placeholder="Email"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
-      <input
-        name="telefono"
-        placeholder="Teléfono"
-        className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
-      <div className="mb-2 relative">
-        <input
-          name="password"
-          type={showPassword ? "text" : "password"}
-          placeholder="Contraseña"
-          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <div className="mb-2 relative">
-        <input
-          name="password2"
-          type={showPassword ? "text" : "password"}
-          placeholder="Confirmar contraseña"
-          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-          onChange={handleChange}
-          required
-        />
-      </div>
+          {/* Selección de Rol */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-slate-700 mb-3 text-center">Selecciona tu perfil</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+              <div
+                onClick={() => selectRole("cliente")}
+                className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-4 ${form.rol === "cliente"
+                    ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600"
+                    : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                  }`}
+              >
+                <div className={`p-3 rounded-full ${form.rol === "cliente" ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-800">Cliente</div>
+                  <div className="text-xs text-slate-500">Busco servicios de limpieza</div>
+                </div>
+                {form.rol === "cliente" && (
+                  <div className="absolute top-3 right-3 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
 
-      <div className="mb-4 flex items-center">
-        <input
-          type="checkbox"
-          id="showPasswordReg"
-          className="mr-2 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-          checked={showPassword}
-          onChange={() => setShowPassword(!showPassword)}
-        />
-        <label
-          htmlFor="showPasswordReg"
-          className="text-sm text-gray-600 cursor-pointer select-none"
-        >
-          Mostrar contraseña
-        </label>
-      </div>
-      <label className="block text-sm text-gray-600 mb-1">
-        Fecha de Nacimiento
-      </label>
-      <input
-        name="fecha_nacimiento"
-        type="date"
-        className="mb-4 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-        onChange={handleChange}
-        required
-      />
+              <div
+                onClick={() => selectRole("personal")}
+                className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-4 ${form.rol === "personal"
+                    ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600"
+                    : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
+                  }`}
+              >
+                <div className={`p-3 rounded-full ${form.rol === "personal" ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-800">Personal</div>
+                  <div className="text-xs text-slate-500">Quiero trabajar con ustedes</div>
+                </div>
+                {form.rol === "personal" && (
+                  <div className="absolute top-3 right-3 text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-      {/* Campos adicionales SOLO para Personal */}
-      {form.rol === "personal" && (
-        <div className="bg-purple-50 p-4 rounded-lg mb-4 border border-purple-100">
-          <h3 className="font-semibold text-purple-800 mb-2 text-sm">
-            Información Profesional
-          </h3>
-          <label className="block text-xs text-gray-600 mb-1">
-            foto de perfil(Obligatorio)
-          </label>
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png"
-            onChange={(e) => handleFileChange(e, "foto_perfil")}
-            className="mb-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"
-            required
-          />
-          {filePreviews.foto_perfil && (
-            <div className="mb-3">
-              <img
-                src={filePreviews.foto_perfil}
-                alt="Preview Perfil"
-                className="w-24 h-24 object-cover rounded-full border-2 border-purple-200"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 pb-2">Información Personal</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <input name="nombre" placeholder="Nombre" className="input-field" onChange={handleChange} required />
+                <input name="apellido" placeholder="Apellido" className="input-field" onChange={handleChange} required />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <select name="tipo_documento" className="input-field col-span-1" onChange={handleChange} required>
+                  <option value="">Doc</option>
+                  <option value="DNI">DNI</option>
+                  <option value="CE">CE</option>
+                  <option value="Pasaporte">Pasaporte</option>
+                </select>
+                <input name="numero_documento" placeholder="Nro Documento" className="input-field col-span-2" onChange={handleChange} required />
+              </div>
+              <input name="fecha_nacimiento" type="date" className="input-field" onChange={handleChange} required />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-gray-100 pb-2">Datos de Cuenta</h3>
+              <input name="email" type="email" placeholder="Correo Electrónico" className="input-field" onChange={handleChange} required />
+              <input name="telefono" placeholder="Teléfono" className="input-field" onChange={handleChange} required />
+
+              <div className="relative">
+                <input name="password" type={showPassword ? "text" : "password"} placeholder="Contraseña" className="input-field" onChange={handleChange} required />
+              </div>
+              <div className="relative">
+                <input name="password2" type={showPassword ? "text" : "password"} placeholder="Confirmar Contraseña" className="input-field" onChange={handleChange} required />
+              </div>
+
+              <div className="flex items-center mt-2">
+                <input type="checkbox" id="showPass" className="w-4 h-4 text-blue-600 rounded border-gray-300"
+                  onChange={() => setShowPassword(!showPassword)} checked={showPassword} />
+                <label htmlFor="showPass" className="ml-2 text-sm text-slate-600 cursor-pointer">Mostrar contraseñas</label>
+              </div>
+            </div>
+          </div>
+
+          {/* Campos adicionales para Personal */}
+          {form.rol === "personal" && (
+            <div className="mt-8 bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
+              <h3 className="flex items-center gap-2 font-semibold text-indigo-900 mb-4 text-lg">
+                <span className="text-xl">💼</span> Perfil Profesional
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-xs font-semibold text-indigo-800 mb-2 uppercase">Foto de Perfil</label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 cursor-pointer bg-white border border-indigo-200 hover:border-indigo-400 rounded-lg p-3 text-center transition">
+                      <span className="text-sm text-indigo-600 font-medium">Subir Foto</span>
+                      <input type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={(e) => handleFileChange(e, "foto_perfil")} required />
+                    </label>
+                    {filePreviews.foto_perfil && <img src={filePreviews.foto_perfil} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-indigo-800 mb-1">Experiencia (Años)</label>
+                    <input name="anios_experiencia" type="number" min="0" placeholder="0" className="input-field bg-white" onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-indigo-800 mb-1">Zona</label>
+                    <input name="zona_cobertura" placeholder="Ej: Lima" className="input-field bg-white" onChange={handleChange} required />
+                  </div>
+                </div>
+              </div>
+
+              <h4 className="font-semibold text-indigo-900 mb-3 text-sm flex items-center gap-2 border-t border-indigo-200 pt-4">
+                💳 Datos de Cobro (Simulación)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input name="nombre_titular" placeholder="Titular de la tarjeta" className="input-field bg-white" onChange={handleChange} required />
+                <input name="numero_tarjeta" placeholder="Número de Tarjeta" className="input-field bg-white" onChange={handleChange} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <input name="fecha_vencimiento" placeholder="MM/YY" className="input-field bg-white" onChange={handleChange} required />
+                  <input name="cvc" placeholder="CVC" className="input-field bg-white" onChange={handleChange} required />
+                </div>
+              </div>
+
+              <h4 className="font-semibold text-indigo-900 mb-3 text-sm flex items-center gap-2 border-t border-indigo-200 pt-4">
+                📄 Documentación
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Foto DNI</label>
+                  <input type="file" accept=".jpg,.jpeg,.png" onChange={(e) => handleFileChange(e, "dni_foto")}
+                    className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200" />
+
+                  {filePreviews.dni_foto && <p className="text-xs text-green-600 mt-1">✓ Archivo cargado</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Antecedentes</label>
+                  <input type="file" accept=".pdf,.jpg,.png" onChange={(e) => handleFileChange(e, "antecedentes")}
+                    className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200" />
+                  {filePreviews.antecedentes && <p className="text-xs text-green-600 mt-1">✓ Archivo cargado</p>}
+                </div>
+              </div>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Años Experiencia
-              </label>
-              <input
-                name="anios_experiencia"
-                type="number"
-                placeholder="Ej: 2"
-                className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                onChange={handleChange}
-                min="0"
-                title="Los años de experiencia no pueden ser negativos"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Zona Cobertura
-              </label>
-              <input
-                name="zona_cobertura"
-                placeholder="Ej: Lima Norte"
-                className="mb-2 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                onChange={handleChange}
-                required
-              />
-            </div>
+
+          {error && <div className="mt-6 text-red-600 bg-red-50 border border-red-100 p-3 rounded-lg text-sm text-center font-medium">{error}</div>}
+          {success && <div className="mt-6 text-green-600 bg-green-50 border border-green-100 p-3 rounded-lg text-sm text-center font-medium">{success}</div>}
+
+          <div className="mt-8">
+            <button disabled={loading} className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transform transition-all hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 ${form.rol === 'personal' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:ring-indigo-500' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:ring-blue-500'} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
+              {loading ? "Procesando..." : `Crear Cuenta de ${form.rol === 'cliente' ? 'Cliente' : 'Personal'}`}
+            </button>
           </div>
 
-          {/* Datos de Tarjeta (Simulación) */}
-          <div className="mt-4 border-t pt-4 mb-4">
-            <h4 className="font-semibold text-purple-800 mb-3 text-sm flex items-center gap-2">
-              💳 Datos de Tarjeta (Simulación)
-            </h4>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">
-                  Nombre del Titular
-                </label>
-                <input
-                  name="nombre_titular"
-                  placeholder="Como aparece en la tarjeta"
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">
-                  Número de Tarjeta
-                </label>
-                <input
-                  name="numero_tarjeta"
-                  placeholder="0000 0000 0000 0000"
-                  maxLength="19"
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">
-                    Vencimiento (MM/YY)
-                  </label>
-                  <input
-                    name="fecha_vencimiento"
-                    placeholder="MM/YY"
-                    maxLength="5"
-                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">
-                    CVC
-                  </label>
-                  <input
-                    name="cvc"
-                    placeholder="123"
-                    maxLength="4"
-                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-sm"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="mt-6 text-center text-sm text-slate-500">
+            ¿Ya tienes una cuenta? <Link href="/login" className="text-blue-600 font-semibold hover:underline">Inicia Sesión</Link>
+          </p>
 
-          {/* Subida de Documentos */}
-          <div className="mt-4 border-t pt-4">
-            <h4 className="font-semibold text-purple-800 mb-3 text-sm">
-              📄 Documentos Requeridos
-            </h4>
+        </form>
+      </div>
 
-            {/* DNI Foto */}
-            <div className="mb-3">
-              <label className="block text-xs text-gray-700 mb-1 font-medium">
-                Foto de DNI *
-              </label>
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png"
-                onChange={(e) => handleFileChange(e, "dni_foto")}
-                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"
-                required
-              />
-              {filePreviews.dni_foto && (
-                <div className="mt-2">
-                  {filePreviews.dni_foto === "pdf" ? (
-                    <div className="text-xs text-green-600 flex items-center">
-                      <span className="mr-1">✓</span> PDF cargado
-                    </div>
-                  ) : (
-                    <img
-                      src={filePreviews.dni_foto}
-                      alt="Preview DNI"
-                      className="w-24 h-24 object-cover rounded border"
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Certificado de Antecedentes */}
-            <div className="mb-2">
-              <label className="block text-xs text-gray-700 mb-1 font-medium">
-                Certificado de Antecedentes *
-              </label>
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
-                onChange={(e) => handleFileChange(e, "antecedentes")}
-                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"
-                required
-              />
-              {filePreviews.antecedentes && (
-                <div className="mt-2">
-                  {filePreviews.antecedentes === "pdf" ? (
-                    <div className="text-xs text-green-600 flex items-center">
-                      <span className="mr-1">✓</span> PDF cargado
-                    </div>
-                  ) : (
-                    <img
-                      src={filePreviews.antecedentes}
-                      alt="Preview Antecedentes"
-                      className="w-24 h-24 object-cover rounded border"
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs text-gray-500 mt-2">
-              Formatos permitidos: JPG, JPEG, PNG (máx. 5MB)
-            </p>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="text-red-600 mb-2 p-2 bg-red-50 rounded text-sm border border-red-200">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="text-green-600 mb-2 p-2 bg-green-50 rounded text-sm border border-green-200">
-          {success}
-        </div>
-      )}
-      <button
-        disabled={loading}
-        className="w-full py-3 bg-purple-600 text-white rounded font-bold hover:bg-purple-700 disabled:bg-gray-400 transition-colors shadow-lg"
-      >
-        {loading ? "Registrando..." : "Crear Cuenta"}
-      </button>
-    </form>
+      <style jsx>{`
+        .input-field {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 0.5rem;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          font-size: 0.875rem;
+          transition: all 0.2s;
+        }
+        .input-field:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+      `}</style>
+    </div>
   );
 }
