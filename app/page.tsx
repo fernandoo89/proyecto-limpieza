@@ -36,6 +36,9 @@ const PERSONAL_DEMO = [
   }
 ];
 
+import FAQSection from './components/FAQSection';
+import ChatWidget from './components/ChatWidget';
+
 export default function Home() {
 
   return (
@@ -393,6 +396,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ SECTION */}
+      <FAQSection />
+
       {/* FOOTER */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
@@ -433,7 +439,7 @@ export default function Home() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 pt-8 mt-12 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-500 text-sm">© 2025 PeruLimpio. Todos los derechos reservados.</p>
+          <p className="text-gray-500 text-sm">© 2024 PeruLimpio. Todos los derechos reservados.</p>
           <div className="flex gap-6">
             <a href="#" className="text-gray-400 hover:text-white transition-colors">Facebook</a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors">Twitter</a>
@@ -441,6 +447,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* CHAT WIDGET */}
+      <ChatWidget />
     </main>
   );
 }
